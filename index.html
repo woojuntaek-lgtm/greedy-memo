@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1620">
+<title>탐욕과 기억</title>
+<meta name="description" content="8원을 1·4·6원 동전으로 — 지금 가장 좋아 보이는 것을 고르는 탐욕 알고리즘과 기억하며 푸는 동적계획법을 거스름돈·연결망·배송 경로·피보나치·배낭 문제로 비교하는 앱">
+<style>
+:root{--bg:#1a1620;--card:#221d2b;--card2:#2c2638;--fg:#f3f0f8;--mut:#aea6c0;--line:#3d354d;
+--gr:#ff9b5c;--dp:#7cc4ff;--ok:#6fdc9a;--bad:#ff7d7d;--gold:#ffd166;--pur:#b79cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;line-height:1.55}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:1.2rem;margin:6px 0}
+h1 small{display:block;font-size:.76rem;color:var(--mut);font-weight:400}
+.tabs{display:flex;gap:5px;margin:10px 0}
+.tabs button{flex:1;padding:9px 2px;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:10px;font-size:.84rem;font-weight:600}
+.tabs button.on{background:#3a2a1c;color:#fff;border-color:var(--gr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+h2{font-size:1rem;margin:2px 0 8px}
+.note{font-size:.86rem;color:var(--mut);margin:8px 0 0}
+.note b{color:var(--fg)}
+.btn{padding:11px 14px;border-radius:12px;border:0;background:linear-gradient(135deg,#c0702e,#ff9b5c);color:#fff;font-weight:800;font-size:.95rem;flex:1}
+.btn.dp{background:linear-gradient(135deg,#2f6fd0,#7cc4ff)}
+.btn.sec{background:var(--card2);border:1px solid var(--line);color:var(--fg);font-weight:700}
+.btn.sm{flex:none;padding:7px 11px;font-size:.82rem}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row+.row{margin-top:8px}
+.pill{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.84rem}
+.pill.on{border-color:var(--gold);background:#4a3e1a;color:#fff}
+canvas{display:block;width:100%;border-radius:12px;background:#14111a}
+.say{background:#2a2244;border-left:3px solid var(--pur);border-radius:8px;padding:9px 11px;font-size:.92rem;margin-top:10px}
+.say b{color:#fff}
+.say.q{border-left-color:var(--gr);background:#2e2118}
+.res{margin-top:10px;font-size:.92rem;border-radius:10px;padding:10px 12px}
+.res.g{background:#16352a;border:1px solid #2f7a52}
+.res.r{background:#3a1d1d;border:1px solid #8a3a3a}
+.res.y{background:#3a3218;border:1px solid #8a7a3a}
+.mono,code{font-family:ui-monospace,Menlo,Consolas,monospace}
+.sl{display:grid;grid-template-columns:76px 1fr 64px;gap:8px;align-items:center;font-size:.86rem;margin-top:8px}
+.sl input{width:100%}
+.sl b{text-align:right;font-variant-numeric:tabular-nums}
+.lane{background:var(--card2);border-radius:12px;padding:9px 10px;margin-top:8px}
+.lane .hd{display:flex;justify-content:space-between;font-size:.88rem;font-weight:700}
+.lane .hd span:last-child{font-variant-numeric:tabular-nums}
+.coins{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;min-height:44px}
+.coin{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;color:#2a2010;background:radial-gradient(circle at 35% 30%,#fff3c4,#d9a93a);box-shadow:inset 0 -3px 0 #a87b1c;animation:pop .25s}
+.coin.s{background:radial-gradient(circle at 35% 30%,#f3f3f3,#9ea4ad);box-shadow:inset 0 -3px 0 #6d737c}
+.coin.c{background:radial-gradient(circle at 35% 30%,#ffd9b8,#c0703a);box-shadow:inset 0 -3px 0 #8a4a20}
+@keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opts button{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.9rem}
+.opts button.right{border-color:#6fdc9a;background:#16352a}
+.opts button.wrong{border-color:#ff7d7d;background:#3a1d1d}
+.cond{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cond div{background:var(--card2);border-radius:10px;padding:9px 10px;font-size:.84rem}
+.cond div b{display:block;font-size:.92rem}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;text-align:center}
+.stat div{background:var(--card2);border-radius:10px;padding:7px 4px;font-size:.74rem;color:var(--mut)}
+.stat b{display:block;font-size:1.1rem;color:var(--fg);font-variant-numeric:tabular-nums}
+.big{font-size:1.6rem;font-weight:900;text-align:center;margin-top:6px;font-variant-numeric:tabular-nums}
+.big small{display:block;font-size:.78rem;font-weight:400;color:var(--mut)}
+.jobs{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.jobs div{display:grid;grid-template-columns:40px 1fr 1fr 70px;gap:6px;align-items:center;background:var(--card2);border-radius:10px;padding:7px 10px;font-size:.86rem}
+.jobs input{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#14111a;color:var(--fg);font-size:.9rem}
+.jobs .r{text-align:right;color:var(--mut);font-variant-numeric:tabular-nums;font-size:.8rem}
+.jobs .pick{border:1px solid var(--gold);background:#3a3218}
+.dpt{overflow-x:auto;margin-top:8px}
+.dpt table{border-collapse:collapse;font-size:.74rem;font-variant-numeric:tabular-nums;min-width:100%}
+.dpt th,.dpt td{padding:5px 4px;text-align:center;border:1px solid #2a2436;min-width:26px}
+.dpt th{color:var(--mut);font-weight:600;background:#1c1824}
+.dpt td.cur{background:#7cc4ff;color:#0c1a2a;font-weight:800}
+.dpt td.src{background:#2a4a6a}
+.dpt td.src2{background:#5a4a1c}
+.dpt td.path{background:#1f5a3c;font-weight:800}
+.dpt td.fin{outline:2px solid var(--gold)}
+.sum3{margin-top:12px;background:linear-gradient(135deg,#3a2a1c,#1d3358);border-radius:14px;padding:12px 14px}
+.sum3 ol{margin:4px 0;padding-left:20px;font-size:.92rem}
+.mine{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.mine div{display:flex;justify-content:space-between;gap:8px;background:var(--card2);border-radius:10px;padding:8px 10px;font-size:.88rem}
+.mine button{border:0;background:none;color:var(--mut);font-size:.9rem}
+input[type=text]{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#14111a;color:var(--fg);font-size:.92rem}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+footer{text-align:center;color:var(--mut);font-size:.78rem;margin-top:18px}
+footer a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🪙 탐욕과 기억<small>지금 가장 좋아 보이는 선택 vs 기억하며 푸는 선택</small></h1>
+<div class="tabs">
+  <button class="on" data-tab="t1">① 거스름돈</button>
+  <button data-tab="t2">② 연결·배송</button>
+  <button data-tab="t3">③ 기억하기</button>
+  <button data-tab="t4">④ 공장 시간</button>
+</div>
+
+<!-- ① 거스름돈 -->
+<section id="tab-t1">
+  <div class="card">
+    <h2>🪙 큰 동전부터 고르면 늘 최선일까?</h2>
+    <div class="row"><button class="pill on" data-cs="odd">이상한 나라 1·4·6원</button><button class="pill" data-cs="kr">우리나라 10·50·100·500원</button></div>
+    <div class="sl"><span>거스름돈</span><input type="range" id="amt" min="1" max="30" value="8"><b id="amtV"></b></div>
+    <div class="lane"><div class="hd"><span style="color:#ff9b5c">🤑 탐욕: 큰 동전부터</span><span id="gN"></span></div><div class="coins" id="gC"></div></div>
+    <div class="lane"><div class="hd"><span style="color:#7cc4ff">📒 최선(동적계획법으로 계산)</span><span id="oN"></span></div><div class="coins" id="oC"></div></div>
+    <div id="coinMsg"></div>
+  </div>
+  <div class="card">
+    <h2>❓ 퀴즈 ① 탐욕의 거스름돈</h2>
+    <div class="say q">동전이 <b>1원, 4원, 6원</b>일 때 <b>8원</b>을 큰 동전부터 고르는 방식으로 주면 동전은 몇 개?</div>
+    <div class="opts" id="q1"><button data-a="2">2개</button><button data-a="3">3개</button><button data-a="4">4개</button></div>
+    <div id="q1Msg"></div>
+  </div>
+  <div class="card">
+    <h2>✅ 탐욕을 믿어도 되는 두 조건</h2>
+    <div class="cond"><div><b>① 탐욕적 선택 속성</b>지금의 최선 선택이 최종 최선 답의 일부</div><div><b>② 최적 부분 구조</b>작은 문제의 최선 답을 모으면 큰 문제의 최선 답</div></div>
+    <p class="note">우리나라 동전처럼 큰 동전이 작은 동전과 잘 맞물리게 짜인 체계는 큰 것부터 골라도 손해를 안 봅니다. 1·4·6원 체계는 그렇지 않아 탐욕이 틀립니다.</p>
+  </div>
+</section>
+
+<!-- ② 연결·배송 -->
+<section id="tab-t2" hidden>
+  <div class="card">
+    <h2>🔌 탐욕이 정답인 문제 — 연결망 (최소 신장 트리)</h2>
+    <p class="note" style="margin-top:0">물류 거점 6곳을 도로로 <b>모두 연결</b>하되 전체 길이를 가장 짧게. <b>크루스칼</b>: 짧은 도로부터 하나씩 깔되, <b>고리가 생기면 건너뛰기</b>.</p>
+    <canvas id="mstCv" style="margin-top:8px"></canvas>
+    <div class="row" style="margin-top:8px"><button class="btn" id="mstStep">▶ 다음 도로</button><button class="btn sec sm" id="mstReset">↺</button></div>
+    <div id="mstMsg"></div>
+  </div>
+  <div class="card">
+    <h2>🚚 탐욕이 근사인 문제 — 배송 경로</h2>
+    <p class="note" style="margin-top:0">🏭 물류 센터에서 출발해 배송지 6곳을 한 번씩 들르고 돌아옵니다.</p>
+    <div class="row"><button class="pill on" data-rt="gr">🤑 가까운 곳부터</button><button class="pill" data-rt="opt">📐 720가지 다 따진 최단</button><button class="pill" data-rt="both">둘 다</button></div>
+    <canvas id="tspCv" style="margin-top:8px"></canvas>
+    <div class="stat"><div>가까운 곳부터<b id="tG" style="color:#ff9b5c"></b></div><div>최단 경로<b id="tO" style="color:#7cc4ff"></b></div><div>더 긴 비율<b id="tR"></b></div></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec sm" id="tDef">↺ 기본 지도</button><button class="btn sec sm" id="tNew">🎲 새 지도</button></div>
+    <div id="tspMsg"></div>
+  </div>
+  <div class="card">
+    <h2>💥 왜 다 따지지 않을까 — 순서의 수</h2>
+    <div class="sl"><span>배송지 수</span><input type="range" id="fn" min="3" max="25" value="6"><b id="fnV"></b></div>
+    <div class="big" id="fact"></div>
+    <div id="factMsg"></div>
+  </div>
+</section>
+
+<!-- ③ 기억하기 -->
+<section id="tab-t3" hidden>
+  <div class="card">
+    <h2>🌳 피보나치의 폭발 — 같은 계산이 수없이</h2>
+    <p class="note" style="margin-top:0">fib(n) = fib(n−1) + fib(n−2). 기억 없이 재귀로 부르면 같은 질문을 계속 다시 계산합니다.</p>
+    <div class="sl"><span>n</span><input type="range" id="fibN" min="2" max="40" value="30"><b id="fibNV"></b></div>
+    <div class="stat"><div>기억 없이 호출<b id="fNaive" style="color:#ff9b5c"></b></div><div>메모이제이션 호출<b id="fMemo" style="color:#7cc4ff"></b></div><div>fib(n) 값<b id="fVal"></b></div></div>
+    <div id="fibMsg"></div>
+  </div>
+  <div class="card">
+    <h2>🔍 호출 나무 들여다보기 (작은 n)</h2>
+    <div class="row"><button class="pill on" data-tr="5">fib(5)</button><button class="pill" data-tr="6">fib(6)</button><button class="pill" data-tr="7">fib(7)</button></div>
+    <div class="row" style="margin-top:6px"><button class="pill on" data-mm="0">🤑 기억 없이</button><button class="pill" data-mm="1">📒 기억하며</button></div>
+    <canvas id="treeCv" style="margin-top:8px"></canvas>
+    <div id="treeMsg"></div>
+  </div>
+  <div class="card">
+    <h2>❓ 퀴즈 ② 몇 번이나 부를까</h2>
+    <div class="say q">fib(<b>10</b>)을 <b>기억 없이</b> 재귀로 계산하면 함수는 모두 몇 번 불릴까요?</div>
+    <div class="opts" id="q2"><button data-a="11">11번</button><button data-a="177">177번</button><button data-a="1000">1,000번 이상</button></div>
+    <div id="q2Msg"></div>
+  </div>
+  <div class="card">
+    <h2>⬇️ 하향식 vs ⬆️ 상향식</h2>
+    <div class="cond"><div><b>⬇️ 하향식 (메모이제이션)</b>큰 문제에서 재귀로 내려가며 구한 값을 메모. 생각한 그대로 코드가 되어 읽기 쉬움</div><div><b>⬆️ 상향식 (표 채우기)</b>가장 작은 문제부터 반복문으로 표를 채워 올라감. 재귀가 깊어져 멈출 걱정이 없어 실무에서 많이 씀</div></div>
+    <p class="note">동적계획법의 두 조건: <b>중복 부분 문제</b>(같은 작은 문제가 반복) + <b>최적 부분 구조</b>. 반복이 없으면 기억할 이유가 없으니 병합 정렬 같은 분할 정복이 더 적합합니다.</p>
+  </div>
+</section>
+
+<!-- ④ 공장 시간 -->
+<section id="tab-t4" hidden>
+  <div class="card">
+    <h2>🏭 기계 하루 10시간 — 배낭 문제</h2>
+    <p class="note" style="margin-top:0">작업은 쪼갤 수 없습니다. 숫자를 바꿔 보셔도 됩니다.</p>
+    <div class="sl"><span>사용 가능</span><input type="range" id="cap" min="1" max="14" value="10"><b id="capV"></b></div>
+    <div class="jobs" id="jobs"></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="kG">🤑 시간당 이익 큰 것부터</button><button class="btn dp" id="kD">📒 동적계획법 표 채우기</button></div>
+    <div id="kMsg"></div>
+    <div class="dpt" id="dpt"></div>
+    <div class="row" style="margin-top:8px" id="kCtl" hidden><button class="btn sec sm" id="kStep">▶ 한 칸</button><button class="btn sec sm" id="kAll">⏩ 끝까지</button></div>
+  </div>
+  <div class="card">
+    <h2>⚠️ 동적계획법의 한계</h2>
+    <p class="note" style="margin-top:0">시간뿐 아니라 전력·인력 같은 제약이 늘면 표가 2차원 → 3차원 → 4차원으로 커져 메모리가 감당하지 못합니다. 큰 공장 전체 일정은 근사 방법이나 다른 탐색을 섞어서 풉니다. <b>문제의 크기와 필요한 정확도</b>에 맞춰 고르세요.</p>
+  </div>
+  <div class="card">
+    <h2>📌 세 줄 정리</h2>
+    <div class="sum3"><ol>
+      <li><b>탐욕</b>은 지금 가장 좋아 보이는 것을 고르며, 빠르지만 <b>항상 최선은 아니다</b>.</li>
+      <li><b>연결망</b>처럼 조건을 만족하는 문제에선 탐욕이 정답을, <b>배송 경로</b>처럼 어려운 문제에선 좋은 근사를 준다.</li>
+      <li>같은 작은 문제가 반복되면 <b>동적계획법</b>으로 기억하며 풀어 정확한 최선을 찾는다.</li>
+    </ol></div>
+  </div>
+  <div class="card">
+    <h2>🤔 생각해 볼 질문</h2>
+    <p class="note" style="margin-top:0">지금 가장 좋아 보이는 선택을 했다가 나중에 손해 본 경험을 탐욕 알고리즘의 눈으로 다시 보세요. 그때 이전 경험을 <b>표로 남겨 두었다면</b>? (이 기기에만 저장)</p>
+    <div class="row" style="margin-top:8px"><input type="text" id="myIn" maxlength="60" placeholder="예: 가장 싼 것부터 담다가 더 좋은 조합을 놓친 장보기"><button class="btn sm" id="myAdd">추가</button></div>
+    <div class="mine" id="mine"></div>
+  </div>
+</section>
+
+<footer>© 2026 정필 수심명 · <a href="https://blog.naver.com/omyman" target="_blank" rel="noopener">blog.naver.com/omyman</a><br>지능 03 부록 · 인터넷 없이 동작</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800);}
+const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n);}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function prep(cv,ratio){const dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||320,h=Math.round(w*ratio);
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return{c,w,h};}
+function T(c,s,x,y,col,size,al,bl,wt){c.fillStyle=col;c.font=`${wt||''} ${size||12}px -apple-system,"Malgun Gothic",sans-serif`;c.textAlign=al||'center';c.textBaseline=bl||'middle';c.fillText(s,x,y);}
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const KR=n=>{if(n>=1e16)return(n/1e16).toFixed(n>=1e17?0:1)+'경';if(n>=1e12)return(n/1e12).toFixed(1)+'조';if(n>=1e8)return(n/1e8).toFixed(1)+'억';if(n>=1e4)return Math.round(n/1e4).toLocaleString()+'만';return Math.round(n).toLocaleString();};
+
+/* ===== ① 거스름돈 ===== */
+const CS={odd:{coins:[6,4,1],min:1,max:30,step:1,def:8,u:'원'},kr:{coins:[500,100,50,10],min:10,max:3000,step:10,def:1260,u:'원'}};let cs='odd';
+function greedyCoins(a,cs){const o=[];for(const c of cs){while(a>=c){o.push(c);a-=c;}}return a===0?o:null;}
+function optCoins(a,cs){const dp=new Array(a+1).fill(Infinity),pr=new Array(a+1).fill(-1);dp[0]=0;for(let x=1;x<=a;x++)for(const c of cs)if(c<=x&&dp[x-c]+1<dp[x]){dp[x]=dp[x-c]+1;pr[x]=c;}
+  if(dp[a]===Infinity)return null;const o=[];let x=a;while(x>0){o.push(pr[x]);x-=pr[x];}return o.sort((p,q)=>q-p);}
+const coinHTML=arr=>arr.map(c=>`<span class="coin ${c>=100?'s':c===10||c===50?'c':''}">${c}</span>`).join('');
+function coins(){const S=CS[cs],a=+$('#amt').value;$('#amtV').textContent=a.toLocaleString()+S.u;const g=greedyCoins(a,S.coins),o=optCoins(a,S.coins);
+  $('#gC').innerHTML=coinHTML(g);$('#oC').innerHTML=coinHTML(o);$('#gN').textContent=g.length+'개';$('#oN').textContent=o.length+'개';
+  $('#coinMsg').innerHTML=g.length>o.length?`<div class="res r">🤑 큰 동전부터 고르니 <b>${g.length}개</b>, 그런데 최선은 <b>${o.length}개</b>(${o.join(' + ')})! 첫 선택(${g[0]}원)이 좋아 보여도 나중에 손해를 봤습니다. 탐욕은 당장의 이익을 쫓다가 <b>전체에서 더 큰 손해</b>를 볼 수 있습니다.</div>`
+   :`<div class="res g">✅ 탐욕(${g.length}개) = 최선(${o.length}개). ${cs==='kr'?'우리나라 동전은 큰 것부터 골라도 손해를 보지 않는 체계라, 언제나 탐욕이 최선입니다.':'이 금액에선 운 좋게 같습니다. 8원, 12원 같은 금액도 해 보세요.'}</div>`;}
+$('#amt').addEventListener('input',coins);
+$$('[data-cs]').forEach(b=>b.onclick=()=>{$$('[data-cs]').forEach(x=>x.classList.toggle('on',x===b));cs=b.dataset.cs;const S=CS[cs];Object.assign($('#amt'),{min:S.min,max:S.max,step:S.step});$('#amt').value=S.def;coins();});
+$$('#q1 button').forEach(b=>b.onclick=()=>{const ok=b.dataset.a==='3';$$('#q1 button').forEach(x=>x.className=x.dataset.a==='3'?'right':x===b?'wrong':'');vib(ok?[30,40,60]:80);
+  $('#q1Msg').innerHTML=`<div class="res ${ok?'g':'r'}">${ok?'🎉 정답!':'아쉽네요.'} 정답은 <b>3개</b> — 6원, 1원, 1원. 하지만 가장 좋은 답은 <b>4원 두 개</b>, 즉 2개입니다. 탐욕이 항상 최선은 아닙니다.</div>`;});
+
+/* ===== ② 최소 신장 트리 ===== */
+const MN=[[.12,.25,'A'],[.45,.12,'B'],[.85,.2,'C'],[.25,.75,'D'],[.6,.55,'E'],[.88,.82,'F']];
+const ME=[[0,1,4],[0,3,6],[1,2,5],[1,4,3],[0,4,7],[2,4,4],[3,4,5],[2,5,6],[4,5,3],[3,5,8]];
+let mi=0,mPick=[],mSkip=[],par=[];const sortedE=[...ME.keys()].sort((a,b)=>ME[a][2]-ME[b][2]);
+function find(x){while(par[x]!==x)x=par[x]=par[par[x]];return x;}
+function mstReset(){mi=0;mPick=[];mSkip=[];par=MN.map((_,i)=>i);drawMst();$('#mstMsg').innerHTML='<div class="say">도로 후보를 <b>짧은 순서</b>로 늘어놓았습니다. ▶를 눌러 하나씩 깔아 보세요.</div>';$('#mstStep').disabled=false;}
+function drawMst(cur){const {c,w,h}=prep($('#mstCv'),0.62);c.clearRect(0,0,w,h);const P=i=>[MN[i][0]*w,MN[i][1]*h];
+  ME.forEach((e,k)=>{const [a,b,wt]=e,[x1,y1]=P(a),[x2,y2]=P(b),pk=mPick.includes(k),sk=mSkip.includes(k),cu=cur===k;
+    c.strokeStyle=pk?'#6fdc9a':sk?'#ff7d7d55':cu?'#ffd166':'#3d354d';c.lineWidth=pk?5:cu?4:2;c.setLineDash(sk?[4,4]:[]);c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.setLineDash([]);
+    const mx=(x1+x2)/2,my=(y1+y2)/2;c.fillStyle='#14111a';c.beginPath();c.arc(mx,my,10,0,7);c.fill();T(c,String(wt),mx,my,pk?'#6fdc9a':sk?'#ff7d7d':'#aea6c0',11,'center','middle','bold');});
+  MN.forEach((n,i)=>{const [x,y]=P(i);c.beginPath();c.arc(x,y,15,0,7);c.fillStyle='#2c2638';c.fill();c.strokeStyle='#b79cff';c.lineWidth=2;c.stroke();T(c,n[2],x,y,'#fff',13,'center','middle','bold');});
+  const tot=mPick.reduce((s,k)=>s+ME[k][2],0);T(c,`깔린 도로 ${mPick.length}/5 · 총 길이 ${tot}`,8,h-10,'#ffd166',12,'left');}
+$('#mstStep').onclick=()=>{if(mPick.length>=MN.length-1)return;const k=sortedE[mi++];const [a,b,wt]=ME[k],ra=find(a),rb=find(b);
+  if(ra===rb){mSkip.push(k);drawMst(k);$('#mstMsg').innerHTML=`<div class="res r">⛔ ${MN[a][2]}–${MN[b][2]} (${wt}): 이미 연결된 무리끼리라 <b>고리</b>가 생깁니다 → 건너뛰기</div>`;vib(40);}
+  else{par[ra]=rb;mPick.push(k);drawMst(k);vib(15);
+    if(mPick.length===MN.length-1){const tot=mPick.reduce((s,q)=>s+ME[q][2],0);$('#mstMsg').innerHTML=`<div class="res g">🎉 거점 6곳이 도로 5개로 모두 연결! 총 길이 <b>${tot}</b> — 이것이 가장 짧은 연결망입니다. 이 문제는 탐욕이 통하는 두 조건을 만족한다는 것이 <b>증명</b>되어 있어, 통신망·전력망·배관망 설계에 널리 쓰입니다. (한 거점에서 가장 가까운 거점을 하나씩 붙여 가는 <b>프림</b> 방식도 같은 답)</div>`;$('#mstStep').disabled=true;}
+    else $('#mstMsg').innerHTML=`<div class="say">✅ ${MN[a][2]}–${MN[b][2]} (${wt}): 지금 남은 것 중 가장 짧고 고리도 안 생김 → 깔기</div>`;}};
+$('#mstReset').onclick=mstReset;
+
+/* ===== ② 배송 경로 ===== */
+const DEFP=[[5,5],[2.4,6.1],[6.4,7.7],[0.1,9.9],[7.4,7.8],[7.2,8.7],[7.7,2.2]];let PTS=DEFP.map(p=>p.slice()),rt='gr',SC=1.3066;
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])*SC;
+function perms(a){if(a.length<2)return[a];const o=[];a.forEach((x,i)=>perms(a.filter((_,j)=>j!==i)).forEach(p=>o.push([x,...p])));return o;}
+const P6=perms([1,2,3,4,5,6]);
+function tours(){let cur=0,left=[1,2,3,4,5,6],g=[0];while(left.length){let bi=0;left.forEach((v,i)=>{if(dist(PTS[cur],PTS[v])<dist(PTS[cur],PTS[left[bi]]))bi=i;});cur=left[bi];g.push(cur);left.splice(bi,1);}g.push(0);
+  let best=null,bl=Infinity;P6.forEach(p=>{const t=[0,...p,0];const L=len(t);if(L<bl){bl=L;best=t;}});return{g,o:best};}
+const len=t=>t.slice(1).reduce((s,v,i)=>s+dist(PTS[t[i]],PTS[v]),0);
+function drawTsp(){const {g,o}=tours(),lg=len(g),lo=len(o);const {c,w,h}=prep($('#tspCv'),0.8);c.clearRect(0,0,w,h);const pad=22,P=p=>[pad+p[0]/10*(w-2*pad),pad+(10-p[1])/10*(h-2*pad)];
+  const path=(t,col,dash,wd)=>{c.strokeStyle=col;c.lineWidth=wd;c.setLineDash(dash);c.beginPath();t.forEach((v,i)=>{const [x,y]=P(PTS[v]);i?c.lineTo(x,y):c.moveTo(x,y);});c.stroke();c.setLineDash([]);};
+  if(rt!=='gr')path(o,'#7cc4ff',[],rt==='both'?5:3);if(rt!=='opt')path(g,'#ff9b5c',rt==='both'?[7,5]:[],3);
+  if(rt==='gr')g.slice(1,-1).forEach((v,i)=>{const [x,y]=P(PTS[v]);T(c,String(i+1),x+14,y-12,'#ff9b5c',11,'center','middle','bold');});
+  PTS.forEach((p,i)=>{const [x,y]=P(p);if(i===0){T(c,'🏭',x,y,'#fff',22);}else{c.beginPath();c.arc(x,y,9,0,7);c.fillStyle='#2c2638';c.fill();c.strokeStyle='#ffd166';c.lineWidth=2;c.stroke();T(c,'📦',x,y,'#fff',11);}});
+  $('#tG').textContent=lg.toFixed(1);$('#tO').textContent=lo.toFixed(1);const r=(lg/lo-1)*100;$('#tR').textContent=r<0.05?'같음':'+'+r.toFixed(0)+'%';
+  $('#tspMsg').innerHTML=r<0.05?'<div class="res g">이 지도에서는 가까운 곳부터 간 길이 최단과 같습니다. 🎲 새 지도를 눌러 보세요.</div>':`<div class="say">🤑 가까운 곳부터 간 경로가 약 <b>${r.toFixed(0)}%</b> 더 깁니다. 처음엔 가까운 곳으로 갔다가, 마지막에 남은 배송지들이 멀리 흩어져 있어 <b>크게 돌아오게</b> 됩니다. 그래도 빠르고 그럴듯한 출발점이라, 실무에선 탐욕 경로를 다른 방법으로 조금씩 다듬기도 합니다.</div>`;}
+$$('[data-rt]').forEach(b=>b.onclick=()=>{$$('[data-rt]').forEach(x=>x.classList.toggle('on',x===b));rt=b.dataset.rt;drawTsp();});
+$('#tDef').onclick=()=>{PTS=DEFP.map(p=>p.slice());SC=1.3066;drawTsp();};
+$('#tNew').onclick=()=>{const R=rng(Math.floor(Math.random()*1e9));PTS=[[5,5]];for(let i=0;i<6;i++)PTS.push([0.3+R()*9.4,0.3+R()*9.4]);SC=1.3066;drawTsp();vib(15);};
+function fact(){const n=+$('#fn').value;$('#fnV').textContent=n+'곳';let f=1;for(let i=2;i<=n;i++)f*=i;
+  $('#fact').innerHTML=`${n}! = ${f<1e15?f.toLocaleString():f.toExponential(2).replace('e+',' × 10^')}<small>방문 순서 · 약 ${KR(f)} 가지</small>`;
+  const sec=f/1e9;$('#factMsg').innerHTML=`<div class="say">${n<=8?`이 정도는 금방 계산됩니다.`:`1초에 10억 가지를 따지는 컴퓨터로도 약 <b>${sec<60?sec.toFixed(1)+'초':sec<3600*24?(sec/3600).toFixed(1)+'시간':sec<3.15e7*1000?(sec/3.15e7).toFixed(0)+'년':KR(sec/3.15e7)+'년'}</b>. ${n>=15?'현실적인 시간 안에 다 따질 수 없습니다 — <b>완벽함보다 합리적인 신속함</b>이 필요할 때 탐욕은 훌륭한 출발점.':''}`}<br><span style="color:#aea6c0;font-size:.82rem">(1초에 10억 가지는 이해를 돕는 가정)</span></div>`;}
+$('#fn').addEventListener('input',fact);
+
+/* ===== ③ 피보나치 ===== */
+const FIB=[0,1];for(let i=2;i<=41;i++)FIB.push(FIB[i-1]+FIB[i-2]);
+function fibStat(){const n=+$('#fibN').value;$('#fibNV').textContent=n;const naive=2*FIB[n+1]-1,memo=2*n-1;
+  $('#fNaive').textContent=naive.toLocaleString();$('#fMemo').textContent=memo.toLocaleString();$('#fVal').textContent=FIB[n].toLocaleString();
+  $('#fibMsg').innerHTML=`<div class="say">${n===30?'원고와 같은 fib(30): 함수가 <b>2,692,537번</b>(약 269만 번) 불립니다. 한 컴퓨터에서 약 0.2초(환경에 따라 다름). ':''}한번 구한 값을 기억해 두는 <b>메모이제이션</b>을 쓰면 <b>${memo}번</b>으로! 같은 질문을 다시 받으면 계산하지 않고 적어 둔 답을 바로 돌려주기 때문입니다. 지수적으로 늘던 계산이 거의 <b>일직선</b>으로 바뀝니다.${n>=35?' (n이 1 커질 때마다 기억 없는 호출은 약 1.6배씩 늘어납니다)':''}</div>`;}
+$('#fibN').addEventListener('input',fibStat);
+let trN=5,mm=0;
+function drawTree(){const nodes=[];const memo=new Set();let order=0;
+  let leaf=0;function build(n,depth){const id=nodes.length;const node={n,depth,x:0,kids:[],hit:false,ord:order++};nodes.push(node);
+    if(mm&&memo.has(n)&&n>1){node.hit=true;node.x=leaf++;return id;}
+    if(n>1){const a=build(n-1,depth+1),b=build(n-2,depth+1);node.kids=[a,b];node.x=(nodes[a].x+nodes[b].x)/2;}else node.x=leaf++;memo.add(n);return id;}
+  build(trN,0);nodes.forEach(n=>n.x=leaf>1?n.x/(leaf-1):0.5);const maxD=Math.max(...nodes.map(n=>n.depth));const {c,w,h}=prep($('#treeCv'),0.62);c.clearRect(0,0,w,h);
+  const X=x=>20+x*(w-40),Y=d=>20+d*((h-40)/Math.max(1,maxD));const cnt={};nodes.forEach(n=>{if(!n.hit)cnt[n.n]=(cnt[n.n]||0)+1;});
+  nodes.forEach(n=>n.kids.forEach(k=>{c.strokeStyle='#3d354d';c.lineWidth=1.5;c.beginPath();c.moveTo(X(n.x),Y(n.depth));c.lineTo(X(nodes[k].x),Y(nodes[k].depth));c.stroke();}));
+  const r=Math.max(6,Math.min(13,(w-40)/Math.max(1,leaf-1)*0.42));
+  nodes.forEach(n=>{const rep=!mm&&cnt[n.n]>1&&n.n>1;c.beginPath();c.arc(X(n.x),Y(n.depth),r,0,7);c.fillStyle=n.hit?'#1f3a5a':rep?'#5a2a1c':'#2c2638';c.fill();c.strokeStyle=n.hit?'#7cc4ff':rep?'#ff9b5c':'#b79cff';c.lineWidth=2;c.stroke();T(c,n.hit?'📒':String(n.n),X(n.x),Y(n.depth),'#fff',r*0.95,'center','middle','bold');});
+  const calls=nodes.length;
+  $('#treeMsg').innerHTML=mm?`<div class="say">📒 기억하며: 호출 <b>${calls}번</b>. 파란 📒 = "이미 적어 둔 답이네!" 하고 바로 돌려준 호출 — 더 아래로 내려가지 않습니다.</div>`:`<div class="say">🤑 기억 없이: 호출 <b>${calls}번</b>. 주황 테두리 = <b>같은 계산을 또 하는</b> 칸들. fib(${trN-2})만 해도 ${cnt[trN-2]}번, fib(2)는 ${cnt[2]}번이나 계산합니다.</div>`;}
+$$('[data-tr]').forEach(b=>b.onclick=()=>{$$('[data-tr]').forEach(x=>x.classList.toggle('on',x===b));trN=+b.dataset.tr;drawTree();});
+$$('[data-mm]').forEach(b=>b.onclick=()=>{$$('[data-mm]').forEach(x=>x.classList.toggle('on',x===b));mm=+b.dataset.mm;drawTree();});
+$$('#q2 button').forEach(b=>b.onclick=()=>{const ok=b.dataset.a==='177';$$('#q2 button').forEach(x=>x.className=x.dataset.a==='177'?'right':x===b?'wrong':'');vib(ok?[30,40,60]:80);
+  $('#q2Msg').innerHTML=`<div class="res ${ok?'g':'r'}">${ok?'🎉 정답!':'아쉽네요.'} 정답은 <b>177번</b>. 열 번째 수 하나를 구하려고 함수를 177번이나 부릅니다. 기억을 쓰면 <b>19번</b>이면 됩니다. 같은 작은 문제가 반복된다면 일단 <b>기억할 방법</b>부터 떠올리세요. (위 슬라이더를 10에 맞춰 확인!)</div>`;$('#fibN').value=10;fibStat();});
+
+/* ===== ④ 배낭 ===== */
+let JOBS=[['A',6,9],['B',5,7],['C',5,7]];
+function drawJobs(pick){$('#jobs').innerHTML='<div style="background:none;padding:0 10px;color:#aea6c0;font-size:.76rem"><span>작업</span><span>시간</span><span>이익(억)</span><span class="r">시간당</span></div>'+JOBS.map((j,i)=>`<div class="${pick&&pick.includes(i)?'pick':''}"><b>${j[0]}</b><input type="number" min="1" max="14" value="${j[1]}" data-i="${i}" data-k="1"><input type="number" min="1" max="99" value="${j[2]}" data-i="${i}" data-k="2"><span class="r">${(j[2]/j[1]).toFixed(2)}억</span></div>`).join('');
+  $$('#jobs input').forEach(inp=>inp.onchange=()=>{const v=Math.max(1,Math.min(+inp.max,Math.round(+inp.value)||1));JOBS[+inp.dataset.i][+inp.dataset.k]=v;resetK();});}
+function resetK(){$('#capV').textContent=$('#cap').value+'시간';drawJobs();$('#kMsg').innerHTML='';$('#dpt').innerHTML='';$('#kCtl').hidden=true;dpGen=null;}
+$('#cap').addEventListener('input',resetK);
+$('#kG').onclick=()=>{const cap=+$('#cap').value,ord=JOBS.map((j,i)=>i).sort((a,b)=>JOBS[b][2]/JOBS[b][1]-JOBS[a][2]/JOBS[a][1]);let left=cap,pick=[],val=0,log=[];
+  ord.forEach(i=>{const [n,t,v]=JOBS[i];if(t<=left){pick.push(i);left-=t;val+=v;log.push(`✅ ${n}(${t}시간, 시간당 ${(v/t).toFixed(2)}억) 선택 → 남은 ${left}시간`);}else log.push(`⛔ ${n}(${t}시간) — 남은 ${left}시간에 안 들어감`);});
+  drawJobs(pick);const best=solve(cap).best;
+  $('#kMsg').innerHTML=`<div class="res ${val<best?'r':'g'}">🤑 시간당 이익이 큰 순서로: <br>${log.join('<br>')}<br>→ 결과 <b>${val}억 원</b>${val<best?` · 그런데 최선은 <b>${best}억</b>! 📒 동적계획법 표를 채워 보세요.`:' (이 설정에선 최선과 같음)'}</div>`;vib(val<best?60:20);};
+function solve(cap){const n=JOBS.length,T=[...Array(n+1)].map(()=>Array(cap+1).fill(0));for(let i=1;i<=n;i++){const [,t,v]=JOBS[i-1];for(let c=0;c<=cap;c++){T[i][c]=T[i-1][c];if(t<=c&&T[i-1][c-t]+v>T[i][c])T[i][c]=T[i-1][c-t]+v;}}return{T,best:T[n][cap]};}
+let dpGen=null;
+function renderTable(T,cur,src,src2,path,done){const cap=+$('#cap').value;let h='<table><tr><th>작업＼시간</th>'+[...Array(cap+1).keys()].map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  for(let i=0;i<T.length;i++){h+=`<tr><th>${i===0?'없음':JOBS[i-1][0]+` (${JOBS[i-1][1]}h·${JOBS[i-1][2]}억)`}</th>`;for(let c=0;c<=cap;c++){const k=i+','+c,v=T[i][c];let cl='';if(cur===k)cl='cur';else if(src===k)cl='src';else if(src2===k)cl='src2';if(path&&path.has(k))cl+=' path';if(done&&i===T.length-1&&c===cap)cl+=' fin';h+=`<td class="${cl}">${v===null?'':v}</td>`;}h+='</tr>';}
+  $('#dpt').innerHTML=h+'</table>';}
+function* dpSteps(){const cap=+$('#cap').value,n=JOBS.length,T=[Array(cap+1).fill(0),...[...Array(n)].map(()=>Array(cap+1).fill(null))];
+  for(let i=1;i<=n;i++){const [nm,t,v]=JOBS[i-1];for(let c=0;c<=cap;c++){const skip=T[i-1][c];let take=-1;if(t<=c)take=T[i-1][c-t]+v;T[i][c]=Math.max(skip,take);
+      yield{T,cur:i+','+c,src:(i-1)+','+c,src2:t<=c?(i-1)+','+(c-t):null,msg:`<b>${nm}</b>, ${c}시간: 안 하면 윗칸 <b>${skip}</b>${t<=c?` vs 하면 (${c}−${t}=${c-t}시간 칸 ${T[i-1][c-t]}) + ${v} = <b>${take}</b>`:` (${t}시간짜리라 못 함)`} → <b>${T[i][c]}</b>`};}}
+  // 되짚기
+  const path=new Set(),pick=[];let c=cap;for(let i=n;i>=1;i--){path.add(i+','+c);if(T[i][c]!==T[i-1][c]){pick.push(i-1);c-=JOBS[i-1][1];}}path.add('0,'+c);
+  return{T,path,pick};}
+function kStep(){if(!dpGen)return;const r=dpGen.next();if(r.done){const {T,path,pick}=r.value;renderTable(T,null,null,null,path,true);drawJobs(pick);$('#kCtl').hidden=true;
+    const best=T[T.length-1][+$('#cap').value];$('#kMsg').innerHTML=`<div class="res g">📒 표의 마지막 칸(노란 테두리) = 최대 이익 <b>${best}억 원</b>! 초록 칸을 거꾸로 따라가면 고른 작업: <b>${pick.reverse().map(i=>JOBS[i][0]).join(' + ')}</b>. 모든 경우를 다 따지는 것과 결과는 같지만 훨씬 빠릅니다. 정해진 크기의 배낭에 가장 값진 물건을 담는 <b>배낭 문제</b>와 같은 구조.</div>`;vib([30,40,60]);dpGen=null;return false;}
+  const s=r.value;renderTable(s.T,s.cur,s.src,s.src2);$('#kMsg').innerHTML=`<div class="say">${s.msg}<br><span style="color:#aea6c0;font-size:.8rem">파란 칸 = 지금 채우는 칸 · 진파랑 = 안 하는 경우(윗칸) · 황토 = 하는 경우(작업 시간만큼 뺀 칸)</span></div>`;return true;}
+$('#kD').onclick=()=>{dpGen=dpSteps();$('#kCtl').hidden=false;drawJobs();kStep();};
+$('#kStep').onclick=kStep;$('#kAll').onclick=async()=>{while(dpGen&&kStep())await sleep(70);};
+
+/* ===== ④ 나의 예 ===== */
+const MK='greedy.mine';let mine=[];try{mine=JSON.parse(localStorage.getItem(MK)||'[]');if(!Array.isArray(mine))mine=[];}catch(e){mine=[];}
+const saveM=()=>{try{localStorage.setItem(MK,JSON.stringify(mine));}catch(e){}};
+function drawMine(){$('#mine').innerHTML=mine.length?mine.map((m,i)=>`<div><span>🤑→📒 ${esc(m)}</span><button data-d="${i}" aria-label="지우기">✕</button></div>`).join(''):'<p class="note">예산 안에서 고르는 장바구니가 바로 배낭 문제입니다.</p>';
+  $$('#mine button').forEach(b=>b.onclick=()=>{mine.splice(+b.dataset.d,1);saveM();drawMine();});}
+$('#myAdd').onclick=()=>{const v=$('#myIn').value.trim();if(!v)return;mine.unshift(v);mine=mine.slice(0,30);saveM();$('#myIn').value='';drawMine();toast('경험 하나 기록!');};
+$('#myIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#myAdd').click();});
+
+/* ===== 탭 ===== */
+function show(t){$$('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));['t1','t2','t3','t4'].forEach(k=>$('#tab-'+k).hidden=k!==t);
+  if(t==='t2'){drawMst();drawTsp();}if(t==='t3')drawTree();window.scrollTo(0,0);}
+$$('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+window.addEventListener('resize',()=>{if(!$('#tab-t2').hidden){drawMst();drawTsp();}if(!$('#tab-t3').hidden)drawTree();});
+coins();mstReset();drawTsp();fact();fibStat();drawTree();resetK();drawMine();
+})();
+</script>
+</body>
+</html>
